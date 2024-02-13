@@ -4,7 +4,6 @@
 """
 import cmd
 import models
-import re
 
 class HBNBCommand(cmd.Cmd):
     """Command interpreter class"""
@@ -61,7 +60,8 @@ class HBNBCommand(cmd.Cmd):
                     obj_id = args[1]
                     key = "{}.{}".format(class_name, obj_id)
                     if key in models.storage.all():
-                        del models.storage.all()[key]
+                        # Use the destroy(<id>) method of the class
+                        eval(class_name).destroy(obj_id)
                         models.storage.save()
                     else:
                         print("** no instance found **")
@@ -115,8 +115,9 @@ class HBNBCommand(cmd.Cmd):
                             print("** value missing **")
                         else:
                             attribute_value = args[3]
-                            setattr(models.storage.all()[key], attribute_name,
-                                    attribute_value)
+                            # Use the update(<id>, <attribute>, <value>) method
+                            eval(class_name).update(obj_id, attribute_name,
+                                                   attribute_value)
                             models.storage.all()[key].save()
             except NameError:
                 print("** class doesn't exist **")
@@ -185,6 +186,40 @@ class HBNBCommand(cmd.Cmd):
                         models.storage.save()
                     else:
                         print("** no instance found **")
+            except NameError:
+                print("** class doesn't exist **")
+
+    def do_update_instance(self, arg):
+        """Updates an instance based on its ID with a dictionary"""
+        args = arg.split()
+        if not args:
+            print("** class name missing **")
+        else:
+            try:
+                class_name = args[0]
+                if class_name not in models.storage.all():
+                    print("** class doesn't exist **")
+                    return
+                if len(args) == 1:
+                    print("** instance id missing **")
+                else:
+                    obj_id = args[1]
+                    key = "{}.{}".format(class_name, obj_id)
+                    if key not in models.storage.all():
+                        print("** no instance found **")
+                        return
+                    if len(args) == 2:
+                        print("** dictionary missing **")
+                    else:
+                        # Convert the dictionary representation to a dictionary
+                        try:
+                            dictionary_rep = eval(args[2])
+                        except Exception:
+                            print("** invalid dictionary **")
+                            return
+                        # Use the update(<id>, <dictionary>) method
+                        eval(class_name).update(obj_id, dictionary_rep)
+                        models.storage.all()[key].save()
             except NameError:
                 print("** class doesn't exist **")
 
